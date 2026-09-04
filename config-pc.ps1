@@ -35,7 +35,7 @@ w32tm /resync
 Write-Host "Horario sincronizado." -ForegroundColor Green
 
 # ============================================================
-# 3 - CONFIGURAR GOOGLE CHROME
+# 3 - CONFIGURAR GOOGLE CHROME VIA POLITICAS
 # ============================================================
 
 Write-Host "`nConfigurando Google Chrome..." -ForegroundColor Yellow
@@ -47,30 +47,32 @@ if (!(Test-Path $ChromePolicy)) {
     New-Item -Path $ChromePolicy -Force | Out-Null
 }
 
-# --- A) PAGINA INICIAL E INICIALIZACAO ---
-# Definir URL da Pagina Inicial
+# --- A) PAGINA INICIAL E BOTÃO HOME ---
 New-ItemProperty -Path $ChromePolicy -Name "HomepageLocation" -PropertyType String -Value "http://serv-web/portal/" -Force | Out-Null
 New-ItemProperty -Path $ChromePolicy -Name "HomepageIsNewTabPage" -PropertyType DWord -Value 0 -Force | Out-Null
 
-# Exibir Botao de Pagina Inicial (Icone de Casinha)
+# Ativa exibição do Botao Home (Casinha)
 New-ItemProperty -Path $ChromePolicy -Name "ShowHomeButton" -PropertyType DWord -Value 1 -Force | Out-Null
 
-# Abrir o portal automaticamente ao iniciar
+# Abrir portal ao iniciar
 New-Item -Path "$ChromePolicy\RestoreOnStartupURLs" -Force | Out-Null
 New-ItemProperty -Path "$ChromePolicy\RestoreOnStartupURLs" -Name "1" -PropertyType String -Value "http://serv-web/portal/" -Force | Out-Null
 New-ItemProperty -Path $ChromePolicy -Name "RestoreOnStartup" -PropertyType DWord -Value 4 -Force | Out-Null
 
-# --- B) FAVORITOS DA EMPRESA ---
-# Ativar exibicao da Barra de Favoritos
+# --- B) FAVORITOS DA EMPRESA E BARRA DE FAVORITOS ---
+# Forca a exibição da Barra de Favoritos
 New-ItemProperty -Path $ChromePolicy -Name "BookmarkBarEnabled" -PropertyType DWord -Value 1 -Force | Out-Null
 
-# Adicionar link do Portal nos Favoritos Gerenciados
+# Adiciona pasta com o portal da empresa nos favoritos
 $BookmarksJson = '[{"toplevel_name": "Empresa"}, {"name": "Portal da Empresa", "url": "http://serv-web/portal/"}]'
 New-ItemProperty -Path $ChromePolicy -Name "ManagedBookmarks" -PropertyType String -Value $BookmarksJson -Force | Out-Null
 
-# --- C) TEMA ESCURO (DARK MODE) ---
-# Forcar tema escuro na interface do navegador (1 = Escuro, 2 = Claro, 0 = Sistema)
-New-ItemProperty -Path $ChromePolicy -Name "BrowserColorScheme" -PropertyType DWord -Value 1 -Force | Out-Null
+# --- C) MODO ESCURO NO SISTEMA E CHROME ---
+# Força o Modo Escuro no Windows Apps/Chrome
+$ThemePath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+if (Test-Path $ThemePath) {
+    Set-ItemProperty -Path $ThemePath -Name "AppsUseLightTheme" -Value 0 -Force | Out-Null
+}
 
 Write-Host "Chrome configurado com sucesso!" -ForegroundColor Green
 
@@ -86,7 +88,7 @@ Write-Host "==============================================" -ForegroundColor Cya
 Write-Host "`nFuso: Brasilia"
 Write-Host "Sincronizacao: Ativada"
 Write-Host "Portal: http://serv-web/portal/"
-Write-Host "Chrome: Icone Home Ativo | Favorito Adicionado | Modo Escuro"
+Write-Host "Chrome: Icone Home | Favoritos | Modo Escuro"
 Write-Host "`nScript executado por: Oseias Alves-TI" -ForegroundColor DarkGray
 Write-Host "`nPressione qualquer tecla para fechar..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
